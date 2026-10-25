@@ -1,14 +1,27 @@
-// tests/api.spec.ts
-import { test, expect } from '@playwright/test';
+import {test, expect, } from '@playwright/test';
+import {base} from "@faker-js/faker";
 let baseURL: string = 'http://localhost:3000/users';
 
 test.describe('User management API', () => {
 
-    test('all users: should return empty array when no users', async ({ request }) => {
+    const cleanupUsers = async (request: any): Promise<void> => {
         const response = await request.get(`${baseURL}`);
         expect(response.status()).toBe(200);
-        const responseBody = await response.text()
-        expect(responseBody).toBe('[]');
+        const users: Array<any> = await response.json();
+
+        let i = 0;
+        for (i; i < users.length; i = i + 1) {
+            await request.delete(`${baseURL}/${users[i].id}`)
+        }
+        console.log(`Removed: ${i} users`)
+    }
+
+    test('all users: should return empty array when no users', async ({ request }) => {
+        await cleanupUsers(request);
+        const responseAfterCleanup = await request.get(`${baseURL}`);
+        const usersAfterCleanup = await responseAfterCleanup.json();
+        expect(usersAfterCleanup.length).toBe(0);
+
     });
 
     test('find user: should return a user by ID', async ({ request }) => {
@@ -17,7 +30,7 @@ test.describe('User management API', () => {
 
     test('find user: should return 404 if user not found', async ({ request }) => {
 
-    });
+    }); //always more than 100, id > 100
 
     test('create user: should add a new user', async ({ request }) => {
 
